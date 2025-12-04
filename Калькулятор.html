@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Калькулятор вкладов</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #f3e8ff, #e9d6ff);
+        margin: 0;
+        padding: 0;
+    }
+
+    .container {
+        width: 450px;
+        margin: 40px auto;
+        background: #ffffffcc;
+        padding: 25px;
+        border-radius: 14px;
+        box-shadow: 0 0 20px rgba(120, 60, 150, 0.2);
+    }
+
+    h2 {
+        text-align: center;
+        color: #5d2c8b;
+    }
+
+    label {
+        font-weight: bold;
+        display: block;
+        margin-top: 15px;
+        color: #4a2d70;
+    }
+
+    input, select {
+        width: 100%;
+        padding: 8px;
+        margin-top: 6px;
+        border-radius: 6px;
+        border: 1px solid #bda0d9;
+        background: #faf7ff;
+    }
+
+    .radio-area {
+        margin-top: 15px;
+    }
+
+    .result {
+        margin-top: 20px;
+        background: #f9f2ff;
+        padding: 15px;
+        border-radius: 10px;
+        font-size: 18px;
+        text-align: center;
+        color: #4b1f70;
+        border: 1px solid #c7b3e6;
+    }
+
+    button {
+        width: 100%;
+        margin-top: 20px;
+        padding: 12px;
+        background: #7e4aad;
+        color: white;
+        font-size: 16px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background: #683a92;
+    }
+
+    .sum-box {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .sum-box input[type="number"] {
+        width: 140px;
+    }
+</style>
+
+</head>
+<body>
+
+<div class="container">
+    <h2>Калькулятор доходности вклада</h2>
+
+    <label>Сумма вклада (10 000 – 100 000 000)</label>
+    <div class="sum-box">
+        <input type="range" id="sumRange" min="10000" max="100000000" value="100000">
+        <input type="number" id="sumInput" min="10000" max="100000000" value="100000">
+    </div>
+
+    <label>Годовая ставка (%)</label>
+    <input type="number" id="rate" value="10">
+
+    <label>Срок (в днях)</label>
+    <input type="number" id="days" value="365">
+
+    <div class="radio-area">
+        <label><input type="radio" name="mode" value="simple" checked> Простые проценты</label>
+        <label><input type="radio" name="mode" value="complex"> Сложные проценты (капитализация)</label>
+    </div>
+
+    <label>Интервал капитализации (дней, только для сложных)</label>
+    <input type="number" id="capDays" value="30">
+
+    <button onclick="calculate()">Рассчитать</button>
+
+    <div class="result" id="resultBox">Результат появится здесь</div>
+</div>
+
+<script>
+// синхронизация range и number
+const sumRange = document.getElementById("sumRange");
+const sumInput = document.getElementById("sumInput");
+
+sumRange.oninput = () => sumInput.value = sumRange.value;
+sumInput.oninput = () => {
+    if (sumInput.value < 10000) sumInput.value = 10000;
+    if (sumInput.value > 100000000) sumInput.value = 100000000;
+    sumRange.value = sumInput.value;
+};
+
+function calculate() {
+    let P = Number(sumInput.value);
+    let I = Number(document.getElementById("rate").value);
+    let t = Number(document.getElementById("days").value);
+    let K = 365;
+
+    let mode = document.querySelector("input[name='mode']:checked").value;
+    let resultBox = document.getElementById("resultBox");
+
+    // ----- ПРОСТЫЕ ПРОЦЕНТЫ -----
+    if (mode === "simple") {
+        let S = (P * I * t / K) / 100;
+        let total = P + S;
+        resultBox.innerHTML = 
+            `Начисленные проценты: <b>${S.toFixed(2)} ₽</b><br>
+             Итоговая сумма: <b>${total.toFixed(2)} ₽</b>`;
+        return;
+    }
+
+    // ----- СЛОЖНЫЕ ПРОЦЕНТЫ -----
+    let capInterval = Number(document.getElementById("capDays").value);
+    let currentSum = P;
+    let S_all = 0;
+
+    let cycles = Math.floor(t / capInterval);
+
+    for (let i = 0; i < cycles; i++) {
+        let S = (currentSum * I * capInterval / K) / 100;
+        currentSum += S;
+        S_all += S;
+    }
+
+    resultBox.innerHTML =
+        `Начисленные проценты: <b>${S_all.toFixed(2)} ₽</b><br>
+         Итоговая сумма: <b>${currentSum.toFixed(2)} ₽</b>`;
+}
+</script>
+
+</body>
+</html>
